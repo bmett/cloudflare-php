@@ -153,4 +153,11 @@ class DNS implements API
 
         return false;
     }
+
+    public function export(string $zoneID) : string
+    {
+        $response = $this->adapter->get('zones/' . $zoneID . '/dns_records/export');
+
+        return $response->getBody()->getContents();
+    }
 }
