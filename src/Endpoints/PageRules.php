@@ -24,6 +24,82 @@ class PageRules implements API
         $this->adapter = $adapter;
     }
 
+    public function listRulesets(
+        string $zoneID
+    ): array {
+ 
+        $user = $this->adapter->get('zones/' . $zoneID . '/rulesets');
+        $this->body = json_decode($user->getBody());
+
+        return $this->body->result;
+    }
+
+    public function listRuleset(
+        string $zoneID,
+        string $rulesetID
+    ): object {
+ 
+        $user = $this->adapter->get('zones/' . $zoneID . '/rulesets/'.$rulesetID);
+        $this->body = json_decode($user->getBody());
+
+        return $this->body->result;
+    }
+
+    public function deleteRuleset(
+        string $zoneID,
+        string $rulesetID
+    ): bool {
+ 
+        $user = $this->adapter->delete('zones/' . $zoneID . '/rulesets/'.$rulesetID);
+        $this->body = json_decode($user->getBody());
+
+        return true;
+    }
+
+
+    public function createRuleset(
+        string $zoneID,
+        string $domain
+    ): bool {
+ 
+        $action_parameters = [
+            'from_value' => [
+                'target_url' => [
+                    'value' => "https://suspended.mywork.net.au"
+                ],
+                'status_code'           => 302,
+                'preserve_query_string' => false
+            ]
+        ];
+
+        $rules = array();
+        $rules[] = array(
+            'action' => 'redirect',
+            'action_parameters' => $action_parameters,
+            'expression'    => '(http.host contains "'.$domain.'")',
+            'description'   => 'MyWork suspension redirect',
+        );
+
+        $options = [
+            'description'   => 'MyWork suspension redirect',
+            'kind'          => 'zone',
+            'name'          => 'MyWork suspension redirect',
+            'phase'         => 'http_request_dynamic_redirect',
+            'rules'         => $rules,            
+        ];
+
+        $query = $this->adapter->post('zones/' . $zoneID . '/rulesets', $options);
+
+        $this->body = json_decode($query->getBody());
+
+        if (isset($this->body->result->id)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
     /**
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      *
